@@ -1,0 +1,5 @@
+# Ignore mac system files
+.DS_store
+
+# Ignore files with large volumes or data
+Data_Files
