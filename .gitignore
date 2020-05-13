@@ -3,3 +3,6 @@
 
 # Ignore files with large volumes or data
 Data_Files
+
+# Ignore whatever .wav files
+*.wav
