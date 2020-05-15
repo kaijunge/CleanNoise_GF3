@@ -13,3 +13,10 @@ import scipy
 
 
 fs = 44100
+
+# Function to display something quickly
+def plot_y(y, f=0):
+    plt.figure(f)
+    x = np.linspace(0, len(y), len(y))
+    plt.plot(x, y)
+    plt.show
