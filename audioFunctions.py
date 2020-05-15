@@ -1,16 +1,5 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import sounddevice as sd
-import soundfile as sf
-import simpleaudio as sa
-import wave
-import scipy
-from scipy import stats
-from scipy.signal import chirp, correlate
-from scipy.io.wavfile import write
-from variables import *
+from to_import import *
 
-fs = 44100
 sd.default.samplerate = fs  # Sample rate
 sd.default.channels = 1
 
@@ -70,7 +59,3 @@ def playFile(filename):
     print(data)
     sd.wait()  # Wait until file is done playing
     print("done")
-
-
-    
-    

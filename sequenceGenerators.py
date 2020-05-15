@@ -1,4 +1,3 @@
-from variables import *
 from qam import *
 from audioFunctions import *
 from to_import import *
