@@ -9,9 +9,7 @@ def fileToBinary(filename):
     line = file.read().replace("\n", " ")
     file.close()
     binary = '0' + bin(int.from_bytes(line.encode(), 'big'))[2:]
-
     return binary
-
     
 def toText(binary_data):
     # Binary to Text
