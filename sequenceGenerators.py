@@ -95,7 +95,7 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index):
 def repeat_signal(data, repeat_number):
     return np.tile(data, repeat_number)
 
-    
+
 def transmit(chirp_signal, ofdm_symbol_array, play = False):
     
     output = np.concatenate(chirp_signal,Pause(1),ofdm_symbol_array,Pause(1))
