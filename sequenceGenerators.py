@@ -47,15 +47,11 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index):
     ofdm_symbol_array = []
     index = 0
     limit = min(max_freq_index, len(encoded_symbols))
-    print(limit)
     while index < len(encoded_symbols):
         info_block = []
         for i in range(limit): #info_block_length
-            print(i)
             info_block.append(encoded_symbols[i])
             index += 1
-        print(len(info_block))
-        print(info_block_length)
         padding = info_block_length - len(info_block)
         #print(len(chunk), "blah")
         for i in range(padding):
