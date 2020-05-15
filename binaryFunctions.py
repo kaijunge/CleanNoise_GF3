@@ -1,3 +1,5 @@
+from to_import import *
+
 def toBinary(string):
     # Text to Binary
     return '0' + bin(int.from_bytes(string.encode(), 'big'))[2:]
@@ -9,7 +11,6 @@ def fileToBinary(filename):
     binary = '0' + bin(int.from_bytes(line.encode(), 'big'))[2:]
 
     return binary
-
 
     
 def toText(binary_data):

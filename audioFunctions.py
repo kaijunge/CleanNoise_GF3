@@ -10,6 +10,7 @@ from scipy.signal import chirp, correlate
 from scipy.io.wavfile import write
 from variables import *
 
+fs = 44100
 sd.default.samplerate = fs  # Sample rate
 sd.default.channels = 1
 
@@ -39,12 +40,10 @@ def record(seconds):
     print("done")
     return myrecording
 
-# Play note on computer
-def play_np_BT(note):
+# Play note on computer which is possible using a Bluetooth speaker
+def play_note(note):
     # Ensure that highest value is in 16-bit range
     audio = note * (2**15 - 1) / np.max(np.abs(note))
-
-    # Convert to 16-bit data
     audio = audio.astype(np.int16)
 
     # Start playback
