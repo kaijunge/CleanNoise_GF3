@@ -9,6 +9,7 @@ import sounddevice as sd
 import soundfile as sf
 import simpleaudio as sa
 import wave
+import scipy
 
 
 fs = 44100
