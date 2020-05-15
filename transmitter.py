@@ -17,4 +17,4 @@ print(type(known_ofdm_symbols))
 
 plot_y(useful_data_frequencies)
 
-transmit(Chirp(2000, 4000, 1), Pause(1), known_ofdm_symbols, ofdm_symbols, Pause(1), Chirp(2000, 4000, 1))
+transmit2(Chirp(2000, 4000, 1), Pause(1), known_ofdm_symbols, ofdm_symbols, Pause(1), Chirp(2000, 4000, 1))
