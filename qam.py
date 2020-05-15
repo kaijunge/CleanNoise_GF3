@@ -1,9 +1,9 @@
-import math
-import numpy as np
+from to_import import *
 
 # Take a sequence of bits and returns a sequence of BPSK symbols half the length 
 def bpsk(binary):
-    bits_per_symbol = 1
+    #bits_per_symbol = 1
+    
     symbols = []
     for i in range(len(binary)):
         real = 1
@@ -14,6 +14,7 @@ def bpsk(binary):
         symbols.append(real + imaginary)
         
     return np.asarray(symbols)
+
 
 # given a complex number constellation return the constellation (0,1)
 def ibpsk(complex_number_array):
@@ -33,7 +34,9 @@ def ibpsk(complex_number_array):
 # Take a sequence of bits and returns a sequence of QPSK symbols 
 def qpsk(binary):
     assert len(binary)%2 == 0, "Binary string should have length multiple of 2"
-    bits_per_symbol = 2
+    
+    #bits_per_symbol = 2
+    
     symbols = []
     for i in range(int(len(binary)/2)):
         real = 1/math.sqrt(2)
@@ -71,7 +74,9 @@ def iqpsk(complex_number_array):
 # Take a sequence of bits and returns a sequence of 16QAM symbols half the length 
 def qam16(binary):
     assert len(binary)%4 == 0, "Binary string should have length multiple of 4"
-    bits_per_symbol = 4
+    
+    #bits_per_symbol = 4
+    
     symbols = []
     
     modulation = {

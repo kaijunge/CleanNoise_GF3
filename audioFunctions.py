@@ -1,14 +1,4 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import sounddevice as sd
-import soundfile as sf
-import simpleaudio as sa
-import wave
-import scipy
-from scipy import stats
-from scipy.signal import chirp, correlate
-from scipy.io.wavfile import write
-from variables import *
+from to_import import *
 
 sd.default.samplerate = fs  # Sample rate
 sd.default.channels = 1
@@ -39,12 +29,10 @@ def record(seconds):
     print("done")
     return myrecording
 
-# Play note on computer
-def play_np_BT(note):
+# Play note on computer which is possible using a Bluetooth speaker
+def play_note(note):
     # Ensure that highest value is in 16-bit range
     audio = note * (2**15 - 1) / np.max(np.abs(note))
-
-    # Convert to 16-bit data
     audio = audio.astype(np.int16)
 
     # Start playback
@@ -71,7 +59,3 @@ def playFile(filename):
     print(data)
     sd.wait()  # Wait until file is done playing
     print("done")
-
-
-    
-    

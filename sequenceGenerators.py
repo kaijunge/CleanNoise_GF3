@@ -1,10 +1,6 @@
-import numpy as np
-import scipy.signal
-from variables import *
 from qam import *
 from audioFunctions import *
-import cmath
-from scipy.fftpack import fft, fftshift, ifft, fftfreq
+from to_import import *
 
 def scaleToAudible(array):
     scale_factor = 2**15 - 1
@@ -81,5 +77,5 @@ def transmit(ofdm_symbol_array):
     output = np.concatenate((Chirp(2000, 4000, 1),Pause(1),ofdm_symbol_array,Pause(1)))
     write('chirp_signal_4.wav', 44100, output)
 
-    play_np_BT(output)
+    play_note(output)
 
