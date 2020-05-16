@@ -115,6 +115,27 @@ def getImpulse(freq, real_imax):
 
     return impulse, TF_without_rotation
 
+def getImpulse2(freq, real_imax):
+    TF = np.zeros(1024,dtype=complex)
+    TF_without_rotation = np.zeros(1024,dtype=complex)
+    for freq_response in freq:
+        
+        for i in range(1024):
+            if i == 512 or i == 0:
+                TF[i] == 0
+                TF_without_rotation[i] == 0
+            else:
+                div = (freq_response[i]/known[i] ) * cmath.rect(1, math.pi* (0.01+(real_imax-20)*0.001) * i)
+                div2 = (freq_response[i]/known[i] )
+                TF[i] += div 
+                TF_without_rotation[i] += div2
+                
+    TF = [x/repeat for x in TF]
+    TF_without_rotation = [x/repeat for x in TF_without_rotation]
+    impulse = ifft(TF)
+    
+    return impulse, TF_without_rotation
+
 def getResponse(freq_content, TF_without_rotation, real_imax):
     TF_use = TF_without_rotation
     response = np.zeros(511, dtype = complex)
