@@ -6,3 +6,6 @@ Data_Files
 
 # Ignore whatever .wav files
 *.wav
+
+# Ignore specific files here
+Kai testing.ipynb

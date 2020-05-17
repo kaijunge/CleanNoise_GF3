@@ -1,3 +1,9 @@
+'''
+Sequence of functions to trnasmit some data 
+- Outdated, needs changing!
+'''
+
+
 from audioFunctions import *
 from binaryFunctions import *
 from qam import *

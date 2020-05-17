@@ -1,30 +1,41 @@
 from audioFunctions import *
-from scipy.signal import spectrogram
 from qam import *
-from plot import *
+from to_import import *
 
-repeat = 20
+'''repeat = 20
 timeshift = 676
 known_data = F[5]
-
-def removeChirp(y, h):
+'''
+N = 1024
+K = 500
+# y = recorded time series
+# h = chirp signal (for matched filter)
+# pause = pause time in seconds between chirp and data
+def removeChirpAndPause(y, h, pause, plot = True, rng = 10):
+    y = np.reshape(y, y.size)
     g = np.convolve(y, h[::-1], 'valid') # convoluton
-    time_start_index = int(np.argmax(g)) + len(h) + fs # Chirp ends here
+    i_max = np.argmax(g[:int(len(g)/2)])
+    time_start_index = int(i_max + len(h) + fs*pause) # Chirp ends here
     time_data = y[time_start_index:] # remove the chirp
+
+    if plot: 
+        plot_y(y, f=0, title="Received signal")
+        plot_y(g, f=1, title="Match filter convolution")
+        plot_y(g[i_max - rng:i_max + rng], f=2, title="Closeup of peak +- " + str(rng) + " samples")
 
     return time_data
 
-def removeChirpAndKnownData(y, h, N = N, K = K):
-    dft = N + K
-    g = np.convolve(y, h[::-1], 'valid') # convoluton
-    time_start_index = int(np.argmax(g)) + len(h) + fs # Chirp ends here
-    time_start_index_content = time_start_index + repeat*dft # Known_data ends here
-    time_data_content = y[time_start_index_content:] # trim excess
 
-    return time_data_content
-
-
-def sliceData(time_data, timeshift, N = N, K = K):
+# return the array of relevant N time domain samples from an obtained time series
+# Input:    time_data = time series which we assume the data starts at n=0
+#           timeshift = where we want to start collecting the data (some point in the CP)
+#           N         = OFDM length
+#           K         = CP length
+#           repeat    = Number of times each CP+OFDM is repeated
+# Output:   samples   = np array of time series which should be circular_conc(x, h)
+#           freq      = np array of freq series which should be circular_conc(x, h)
+#           remaining = what is left of the original time series after cutting off the data
+def sliceData(time_data, timeshift, N, K, repeat):
     dft = N + K
     samples = []
     freq = []
@@ -33,7 +44,9 @@ def sliceData(time_data, timeshift, N = N, K = K):
         samples[i] = np.reshape(samples[i],np.zeros(N).shape)
         freq.append(fft(samples[i]))
 
-    return samples, freq
+    remaining = time_data[dft*repeat:]
+
+    return np.asarray(samples), np.asarray(freq), remaining
 
 def sliceDataContent(n, time_data_content, timeshift, N = N, K = K):
     dft = N + K
@@ -46,8 +59,7 @@ def sliceDataContent(n, time_data_content, timeshift, N = N, K = K):
         freq_content.append(fft(samples_content[i]))
     return samples_content, freq_content
 
-
-def getPhase(freq):
+def getPhase(freq, repeat):
     Phase = np.zeros(511)
     for freq_response in freq:
         for i in range(1,int(len(freq_response)/2)):
@@ -57,7 +69,15 @@ def getPhase(freq):
 
     return Phase
 
+def getPhase2(TF):
+    Phase = [0]
+    for i in range(1, int( len(TF)/2 )-1):
+        Phase.append(cmath.phase(  TF[i]  ))
+    
+    return np.asarray(Phase)
 
+
+# This is not working well, better solution needed
 def getConvolutionMaximum(Phase):
     max_conv = []
     for s in range(1000):
@@ -115,7 +135,7 @@ def getImpulse(freq, real_imax):
 
     return impulse, TF_without_rotation
 
-def getImpulse2(freq, real_imax):
+def getImpulse2(freq, real_imax, N):
     TF = np.zeros(1024,dtype=complex)
     TF_without_rotation = np.zeros(1024,dtype=complex)
     for freq_response in freq:
@@ -135,6 +155,23 @@ def getImpulse2(freq, real_imax):
     impulse = ifft(TF)
     
     return impulse, TF_without_rotation
+
+def getImpulseSimple(freq, known_freq, N, repeat):
+    TF = np.zeros(N,dtype=complex)
+    for freq_response in freq:
+        
+        for i in range(N):
+            if i == int(N/2) or i == 0:
+                TF[i] == 0
+            else:
+                div = (freq_response[i]/known_freq[i] )
+                TF[i] += div 
+                
+    TF = [x/repeat for x in TF]
+    impulse = ifft(TF)
+    
+    return impulse, TF
+
 
 def getResponse(freq_content, TF_without_rotation, real_imax):
     TF_use = TF_without_rotation
@@ -168,7 +205,6 @@ def receive(h, N, K, repeat, timeshift, known_data):
     return impulse, TF_without_rotation
 
 
-
 def receive2(y, time_start_index, repeat, N, K, num_info_blocks):
 
     y, fs = sf.read('recording.wav') 
@@ -198,7 +234,6 @@ def receive2(y, time_start_index, repeat, N, K, num_info_blocks):
     return responses
 
 
-
 def decode(maximum_freq_index, repetition_length, responses, num_info_blocks):
     # Decoding
     cutoff = maximum_freq_index-maximum_freq_index%repetition_length*8 + repetition_length*8
@@ -222,8 +257,6 @@ def decode(maximum_freq_index, repetition_length, responses, num_info_blocks):
     return recovery
     
 
-
-    
 def checkRecovery(maximum_freq_index, repetition_length, responses, num_info_blocks, relevant_data, known_data):
             
     for n in range(num_info_blocks):

@@ -59,3 +59,7 @@ def playFile(filename):
     print(data)
     sd.wait()  # Wait until file is done playing
     print("done")
+
+def audioDataFromFile(filename):
+    data, fs = sf.read(filename, dtype='float32')  
+    return data
