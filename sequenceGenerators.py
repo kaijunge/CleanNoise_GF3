@@ -126,12 +126,16 @@ def transmit2(*symbol_array):
     play_note(output)
     return output
 
-def save_transmit(tuple_to_send, play = False):
+def save_transmit(tuple_to_send, playOutput = False):
     
     output = np.concatenate( tuple_to_send )
-    write('chirp_signal_4.wav', 44100, output)
 
-    if play:
-        play_note(output)
+    scale_factor = (2**15 - 1)
+    scaled_array = np.int16(output/np.max(np.abs(output)) * scale_factor) 
 
-    return output
+    write('chirp_signal_4.wav', 44100, scaled_array)
+
+    if playOutput:
+        play(scaled_array)
+
+    return scaled_array
