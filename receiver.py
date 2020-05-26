@@ -172,15 +172,36 @@ def getImpulseSimple(freq, known_freq, N, repeat):
     
     return impulse, TF
 
+def getImpulseSimple_time_avg(time_series, known_freq, N, repeat):
+    TF = np.zeros(N,dtype=complex)
+    for i, time in enumerate(time_series):
+        if i == 0:
+            total_time = time
+        else:
+            for j in range(len(time)):
+                total_time[j] += time[j]
+    
+    avg_time = [x/repeat for x in total_time]
+    freq_response = fft(avg_time)
+    for i in range(N):
+        if i == int(N/2) or i == 0:
+            TF[i] == 0
+        else:
+            div = (freq_response[i]/known_freq[i] )
+            TF[i] = div 
+                
+    impulse = ifft(TF)
+    
+    return impulse, TF
 
-def getResponse(freq_content, TF_without_rotation, real_imax):
-    TF_use = TF_without_rotation
+
+def getResponse(freq_content, TF, real_imax, repeat):
     response = np.zeros(511, dtype = complex)
     for freq_response in freq_content:
 
         for i in range(1,int(len(freq_response)/2)):
-            div = (freq_response[i]/ TF_use[i-1]) / cmath.rect(1, math.pi* (0.01+(real_imax)*0.001) * i)
-            div2 = (freq_response[i]/TF_use[i-1] )
+            div = (freq_response[i]/ TF[i-1]) / cmath.rect(1, math.pi* (0.01+(real_imax)*0.001) * i)
+            div2 = (freq_response[i]/TF[i-1] )
 
             response[i-1] += div2
 

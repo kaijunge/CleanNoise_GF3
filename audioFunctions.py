@@ -3,11 +3,6 @@ from to_import import *
 sd.default.samplerate = fs  # Sample rate
 sd.default.channels = 1
 
-# Function to display something quickly
-def plot_y(y):
-    x = np.linspace(0, len(y), len(y))
-    plt.plot(x, y)
-    plt.show
 
 # Recording sound and saving it as a wav file
 def record_and_save(filename, seconds):

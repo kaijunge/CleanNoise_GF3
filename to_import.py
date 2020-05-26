@@ -12,7 +12,7 @@ import wave
 import scipy
 
 
-fs = 48000
+fs = 44100
 
 # Function to display something quickly
 def plot_y(y, f=0, title = ""):

@@ -2,25 +2,18 @@ from qam import *
 from audioFunctions import *
 from to_import import *
 
+# Get a sequence and scale it so it so its max amplitude corresponds with 16 bits
 def scaleToAudible(array, volume = 100):
     scale_factor = (2**15 - 1) * (volume/100)
     scaled_array = np.int16(array/np.max(np.abs(array)) * scale_factor) #Scaling
 
     return scaled_array
 
-#Generate a Zadoff-Chu sequence of given order and length
-def ZadoffChu(order, length, index=0):
-    cf = length % 2
-    n = np.arange(length)
-    arg = np.pi * order * n * (n+cf+2*index)/length
-    return np.exp(-1j*arg)
-
 #Generate a frequency sweep sequence in a given range for a given duration
 def Chirp(f0, f1, t1, volume = 100):
     t = np.linspace(0, t1, int(t1 * fs), False)
     chirp_signal = chirp(t, f0, t1, f1)
     chirp_signal = scaleToAudible(chirp_signal, volume = volume) #Scaling
-
     return chirp_signal
 
 #Generate a sequence of zeros for a given duration
@@ -36,19 +29,6 @@ def random_binary(length):
 
     return output 
 
-
-
-#Create repetitions of symbols
-def repetitionCoding(symbol_array, num_of_repeats):
-
-    repetition_code = []
-
-    for symbol in symbol_array:
-        for i in range(num_of_repeats):
-            repetition_code.append(symbol)
-
-    return np.asarray(repetition_code)
-
 #Assign encoded_symbols to OFDM symbols
 def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0):
     assert DFT_length>=CP_length, "CP length must be <= DFT length"
@@ -58,7 +38,6 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0):
         limit = min(max_freq_index, info_block_length)
     else:
         limit = info_block_length
-
 
     # output list
     ofdm_time_arrays = []
@@ -109,15 +88,32 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0):
 def repeat_signal(data, repeat_number):
     return np.tile(data, repeat_number)
 
+# Save and play (optional) the sequence of arrays which constitutes the transmit da
+def save_transmit(tuple_to_send, playOutput = False):    
+    output = np.concatenate( tuple_to_send )
 
-def transmit(chirp_signal, ofdm_symbol_array, play = False):
-    
-    output = np.concatenate( (chirp_signal,Pause(1),ofdm_symbol_array,Pause(1)) )
-    write('chirp_signal_4.wav', 44100, output)
+    scale_factor = (2**15 - 1)
+    scaled_array = np.int16(output/np.max(np.abs(output)) * scale_factor) 
 
-    if play:
-        play_note(output)
+    write('transmit.wav', fs, scaled_array)
 
+    if playOutput:
+        play(scaled_array)
+
+    return scaled_array
+
+
+
+
+
+
+
+########################################################################
+####   NOT USING THESE NOW   ###########################################
+########################################################################
+
+
+# Not using this now
 def transmit2(*symbol_array):
     output = Pause(1)
     for symbol in symbol_array:
@@ -126,16 +122,19 @@ def transmit2(*symbol_array):
     play_note(output)
     return output
 
-def save_transmit(tuple_to_send, playOutput = False):
+# Not using this now
+def transmit(chirp_signal, ofdm_symbol_array, play = False):
     
-    output = np.concatenate( tuple_to_send )
+    output = np.concatenate( (chirp_signal,Pause(1),ofdm_symbol_array,Pause(1)) )
+    write('transmit.wav', fs, output)
 
-    scale_factor = (2**15 - 1)
-    scaled_array = np.int16(output/np.max(np.abs(output)) * scale_factor) 
+    if play:
+        play_note(output)
 
-    write('chirp_signal_4.wav', 44100, scaled_array)
-
-    if playOutput:
-        play(scaled_array)
-
-    return scaled_array
+# Not using this now
+#Generate a Zadoff-Chu sequence of given order and length
+def ZadoffChu(order, length, index=0):
+    cf = length % 2
+    n = np.arange(length)
+    arg = np.pi * order * n * (n+cf+2*index)/length
+    return np.exp(-1j*arg)
