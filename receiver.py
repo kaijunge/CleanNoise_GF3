@@ -2,16 +2,10 @@ from audioFunctions import *
 from qam import *
 from to_import import *
 
-'''repeat = 20
-timeshift = 676
-known_data = F[5]
-'''
-N = 1024
-K = 500
 # y = recorded time series
 # h = chirp signal (for matched filter)
 # pause = pause time in seconds between chirp and data
-def removeChirpAndPause(y, h, pause, plot = True, rng = 10):
+def removeChirpAndPause(y, h, pause=0, plot = True, rng = 10):
     y = np.reshape(y, y.size)
     g = np.convolve(y, h[::-1], 'valid') # convoluton
     i_max = np.argmax(g[:int(len(g)/2)])
@@ -48,8 +42,44 @@ def sliceData(time_data, timeshift, N, K, repeat):
 
     return np.asarray(samples), np.asarray(freq), remaining
 
-def sliceDataContent(n, time_data_content, timeshift, N = N, K = K):
+# Get the TF of the channel by averaging multiple OFDM symbols 
+def getTF_FreqAverage(freq, known_freq, N, repeat):
+    TF = np.zeros(N,dtype=complex)
+    for freq_response in freq:
+        
+        for i in range(N):
+            if i == int(N/2) or i == 0:
+                TF[i] == 0
+            else:
+                div = (freq_response[i]/known_freq[i] )
+                TF[i] += div 
+                
+    TF = [x/repeat for x in TF]
+    impulse = ifft(TF)
+    
+    return impulse, TF
+
+# Get the TF of the channel from a single OFDM symbol 
+def getTF_SingleSymbol(symbol, known_freq, N, timeshift):    
+    TF = np.zeros(N,dtype=complex)
+    freq = fft(symbol[timeshift:timeshift + N])
+
+    for i in range(N):
+        if i == int(N/2) or i == 0:
+            TF[i] == 0
+        else:
+            div = (freq[i]/known_freq[i] )
+            TF[i] += div 
+
+    impulse = ifft(TF)
+    
+    return impulse, TF
+
+
+def sliceDataContent(data, timeshift, N_data, K_data, N_CE, K_CE, pilot_freq, total_data_symbol):
     dft = N + K
+
+
     samples_content = []
     freq_content = []
     # get the FFT of the data
@@ -58,6 +88,97 @@ def sliceDataContent(n, time_data_content, timeshift, N = N, K = K):
         samples_content[i] = np.reshape(samples_content[i],np.zeros(N).shape)
         freq_content.append(fft(samples_content[i]))
     return samples_content, freq_content
+
+
+
+def decode(maximum_freq_index, repetition_length, responses, num_info_blocks):
+    # Decoding
+    cutoff = maximum_freq_index-maximum_freq_index%repetition_length*8 + repetition_length*8
+
+    recovery = []
+    for n in range(num_info_blocks):
+        
+        relevant_data = responses[n][:cutoff]
+
+        recovered_symbols = []
+        for i in range(int(len(relevant_data)/repetition_length)):
+            a = relevant_data[i*repetition_length:(i+1)*repetition_length]
+            sequence = []
+            for j in range(repetition_length):
+                sequence.append(iqpsk(a[j]))
+
+            recovered_symbols.append(stats.mode(sequence)[0])
+
+        recovery.append(recovered_symbols)
+
+    return recovery
+    
+
+def checkRecovery(maximum_freq_index, repetition_length, responses, num_info_blocks, relevant_data, known_data):
+            
+    for n in range(num_info_blocks):
+        # Check with transmited symbols:
+        transmitted_symbols = []
+        F_ref = known_data[n][1:]
+        for i in range(int(len(relevant_data)/repetition_length)):
+
+            a = F_ref[i*repetition_length:(i+1)*repetition_length]
+
+            sequence = []
+            for j in range(repetition_length):
+                sequence.append(iqpsk(a[j]))
+
+            transmitted_symbols.append(stats.mode(sequence)[0])
+
+
+        match_count = [0,0,0]
+
+        # Get recovered symbols
+        recovered_symbols = decode(maximum_freq_index, repetition_length, responses, num_info_blocks)
+
+        for i in range(len(recovered_symbols)):
+            #print(recovered_symbols[i], transmitted_symbols[i])
+            if recovered_symbols[i] == transmitted_symbols[i]:
+                #print("Match!")
+                match_count[0] += 1
+                match_count[2] += 1
+            else:
+                #print("no match....")
+                match_count[1] += 1
+                match_count[2] += 1
+
+        print("Percent successful = ", 100*match_count[0]/match_count[2])
+
+
+
+########################################################################
+####   NOT USING THESE NOW   ###########################################
+########################################################################
+
+# Not using in main program - maybe in one of the week 2 challenge
+# Get impulse response using a time average
+def getImpulseSimple_time_avg(time_series, known_freq, N, repeat):
+    TF = np.zeros(N,dtype=complex)
+    for i, time in enumerate(time_series):
+        if i == 0:
+            total_time = time
+        else:
+            for j in range(len(time)):
+                total_time[j] += time[j]
+    
+    avg_time = [x/repeat for x in total_time]
+    freq_response = fft(avg_time)
+    for i in range(N):
+        if i == int(N/2) or i == 0:
+            TF[i] == 0
+        else:
+            div = (freq_response[i]/known_freq[i] )
+            TF[i] = div 
+                
+    impulse = ifft(TF)
+    
+    return impulse, TF
+
 
 def getPhase(freq, repeat):
     Phase = np.zeros(511)
@@ -75,7 +196,6 @@ def getPhase2(TF):
         Phase.append(cmath.phase(  TF[i]  ))
     
     return np.asarray(Phase)
-
 
 # This is not working well, better solution needed
 def getConvolutionMaximum(Phase):
@@ -156,44 +276,6 @@ def getImpulse2(freq, real_imax, N):
     
     return impulse, TF_without_rotation
 
-def getImpulseSimple(freq, known_freq, N, repeat):
-    TF = np.zeros(N,dtype=complex)
-    for freq_response in freq:
-        
-        for i in range(N):
-            if i == int(N/2) or i == 0:
-                TF[i] == 0
-            else:
-                div = (freq_response[i]/known_freq[i] )
-                TF[i] += div 
-                
-    TF = [x/repeat for x in TF]
-    impulse = ifft(TF)
-    
-    return impulse, TF
-
-def getImpulseSimple_time_avg(time_series, known_freq, N, repeat):
-    TF = np.zeros(N,dtype=complex)
-    for i, time in enumerate(time_series):
-        if i == 0:
-            total_time = time
-        else:
-            for j in range(len(time)):
-                total_time[j] += time[j]
-    
-    avg_time = [x/repeat for x in total_time]
-    freq_response = fft(avg_time)
-    for i in range(N):
-        if i == int(N/2) or i == 0:
-            TF[i] == 0
-        else:
-            div = (freq_response[i]/known_freq[i] )
-            TF[i] = div 
-                
-    impulse = ifft(TF)
-    
-    return impulse, TF
-
 
 def getResponse(freq_content, TF, real_imax, repeat):
     response = np.zeros(511, dtype = complex)
@@ -255,60 +337,83 @@ def receive2(y, time_start_index, repeat, N, K, num_info_blocks):
     return responses
 
 
-def decode(maximum_freq_index, repetition_length, responses, num_info_blocks):
-    # Decoding
-    cutoff = maximum_freq_index-maximum_freq_index%repetition_length*8 + repetition_length*8
+# slice data which has CE block for every n symbols
+def sliceDataContent2(TF, data, timeshift_data, timeshift_CE, N_data, K_data, N_CE, K_CE, pilot_symbol_freq, total_data_symbol):
+    data_length = N_data + K_data
+    CE_length = N_CE + K_CE
 
-    recovery = []
-    for n in range(num_info_blocks):
-        
-        relevant_data = responses[n][:cutoff]
-
-        recovered_symbols = []
-        for i in range(int(len(relevant_data)/repetition_length)):
-            a = relevant_data[i*repetition_length:(i+1)*repetition_length]
-            sequence = []
-            for j in range(repetition_length):
-                sequence.append(iqpsk(a[j]))
-
-            recovered_symbols.append(stats.mode(sequence)[0])
-
-        recovery.append(recovered_symbols)
-
-    return recovery
+    # block of PL1, PL2, ... , PLx , CE
+    data_block_len = data_length*(pilot_symbol_freq - 1) + CE_length
     
-
-def checkRecovery(maximum_freq_index, repetition_length, responses, num_info_blocks, relevant_data, known_data):
+    # number of these COMPLETE blocks in the data sequence
+    num_data_block = math.floor(total_data_symbol/(pilot_symbol_freq-1)) 
+    remaining_symbols = total_data_symbol - num_data_block * (pilot_symbol_freq-1)
+    
+    received_modulated_data = []
+    # for every block of data we have
+    for i in range(num_data_block + 1):
+        
+        # For any remainders
+        if i == num_data_block and remaining_symbols != 0:
+    
+            remainder_block_len = data_length * remaining_symbols
+            block = data[i*data_block_len:i*data_block_len + remainder_block_len + CE_length]
             
-    for n in range(num_info_blocks):
-        # Check with transmited symbols:
-        transmitted_symbols = []
-        F_ref = known_data[n][1:]
-        for i in range(int(len(relevant_data)/repetition_length)):
+            impulse_local, TF_local = getTF_SingleSymbol(block[-1*CE_length:], known_freq, CE_N, timeshift_CE)
+            
+            ### MAYBE DO SOMETHING LIKE COMPARE THE PHASE OF THIS ONE TO THE INITIAL ONE BUT RIGHT NOW IT'S FINE :P
 
-            a = F_ref[i*repetition_length:(i+1)*repetition_length]
+            symbols_in_block = remaining_symbols
+            
+        # normal procedure
+        else:
+            
+            # get the particular data block in question
+            block = data[i*data_block_len:(i+1)*data_block_len]
 
-            sequence = []
-            for j in range(repetition_length):
-                sequence.append(iqpsk(a[j]))
+            # find the TF in this block
+            impulse_local, TF_local = getTF_SingleSymbol(np.roll(block[-1*CE_length:],0), known_freq, CE_N, timeshift_CE)
 
-            transmitted_symbols.append(stats.mode(sequence)[0])
+            ### MAYBE DO SOMETHING LIKE COMPARE THE PHASE OF THIS ONE TO THE INITIAL ONE BUT RIGHT NOW IT'S FINE :P
 
+            symbols_in_block = pilot_symbol_freq-1
+            
+        
+        start_index = 200
+        end_index = 200 + 512
+        TF_local_roll = fft(np.roll(impulse_local, -1*guard-3))[start_index:end_index]
+        TF_roll = fft(np.roll(impulse_simple, -1*guard-3))[start_index:end_index]
+        
+        angle_local = np.angle(TF_local_roll)
+        angle_reference = np.angle(TF_roll)
+        
+        difference = []
+        for p, val in enumerate(angle_local):
+            difference.append(val - angle_reference[p])
+        
+        x = np.linspace(start_index, end_index, end_index- start_index)
+        param = np.polyfit(x, difference, 1)
+        
+        plot_y(difference, f = i+100, title = i)
+        print(param, i)
+        
+        #plot_y(angle_local, f = i, title = i)
+        #plot_y(angle_reference, f= i)
+        # for every Payload symbol in this data block 
+        for j in range(symbols_in_block):
+            
+            samples_content = np.array(block[ data_length*j : data_length*(j+1) ][timeshift_data:timeshift_data+N_data]) 
+            freq_content = fft(samples_content)
+            
 
-        match_count = [0,0,0]
+            response = np.zeros(int((Payload_N/2) - 1), dtype = complex)
 
-        # Get recovered symbols
-        recovered_symbols = decode(maximum_freq_index, repetition_length, responses, num_info_blocks)
+            for k in range(1,int(len(freq_content)/2)):
+                div = (freq_content[k]/TF[k]) * cmath.rect(1,2*math.pi * k * ((i+1)*0.15+(j+1)*0.05)) # <- Add phase correction
+                response[k-1] += div
+        
+            received_modulated_data.append(np.array(response))
+            
+            
+    return received_modulated_data
 
-        for i in range(len(recovered_symbols)):
-            #print(recovered_symbols[i], transmitted_symbols[i])
-            if recovered_symbols[i] == transmitted_symbols[i]:
-                #print("Match!")
-                match_count[0] += 1
-                match_count[2] += 1
-            else:
-                #print("no match....")
-                match_count[1] += 1
-                match_count[2] += 1
-
-        print("Percent successful = ", 100*match_count[0]/match_count[2])

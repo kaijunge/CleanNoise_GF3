@@ -30,7 +30,7 @@ def random_binary(length):
     return output 
 
 #Assign encoded_symbols to OFDM symbols
-def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0):
+def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0, output_long = False):
     assert DFT_length>=CP_length, "CP length must be <= DFT length"
 
     info_block_length = int(DFT_length/2-1)
@@ -82,7 +82,10 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0):
         ofdm_freq_arrays.append(useful_data_frequencies)
         ofdm_time_arrays.append(ofdm_single_time_domain)
         
-    return np.asarray(ofdm_time_arrays), np.asarray(ofdm_freq_arrays), np.asarray(ofdm_long_time_array)
+    if output_long: 
+        return np.asarray(ofdm_time_arrays), np.asarray(ofdm_freq_arrays), np.asarray(ofdm_long_time_array)
+    else:
+        return np.asarray(ofdm_time_arrays), np.asarray(ofdm_freq_arrays)
 
 # repeat some signal n times (can input 1D or 2D array)
 def repeat_signal(data, repeat_number):
@@ -102,7 +105,18 @@ def save_transmit(tuple_to_send, playOutput = False):
 
     return scaled_array
 
-
+# combine the payload data and dispursed CE symbols in between 
+def prepare_payload(PL_Symbol, CE, CE_inert_freq):
+    Payload = PL_Symbol[0]
+    for i in range(1, len(PL_Symbol)):
+        
+        if i%(CE_inert_freq-1) == 0:
+            Payload = np.concatenate((Payload, CE, PL_Symbol[i]))
+        else: 
+            Payload = np.concatenate((Payload, PL_Symbol[i]))
+            
+    Payload = np.concatenate((Payload, CE))
+    return Payload
 
 
 
