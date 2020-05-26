@@ -130,3 +130,31 @@ def iqam16(complex_number_array):
         binary += bit1 + bit2 + bit3 + bit4
     
     return binary
+
+#Returns array of constellation symbols where the user can specify the modulation sheme for each packet of bits
+#data should be a string of binary digits eg "00101010010101001001"
+#instruct_str - eg [0,1,1,2] where 0 corresponds to zero-padding, 1 - QPSK, 2 - 16QAM
+def variableModulation(data, instruct_str):
+    
+    result = []
+    
+    j = 0 #variable to iterate through the binary data
+    i = 0 #variable to iterate through the instructions 
+    
+    while j < len(data):
+        if instruct_str[i] == 0:
+            result.append(0)
+            j += 1
+            i += 1
+            
+        elif instruct_str[i] == 1:
+            result.append(qpsk(data[j:j+2]))
+            j += 2
+            i += 1
+        
+        elif instruct_str[i] == 2: 
+            result.append(qam16(data[j:j+4]))
+            j += 4
+            i += 1
+    
+    return result
