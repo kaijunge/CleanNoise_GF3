@@ -137,7 +137,7 @@ def iqam16(complex_number_array):
 
 def varyingModulation(data, instruct_str):
     
-    info_block = []
+    info_block = instruct_str
     
     j = 0 #variable to iterate through the binary data
     i = 0 #variable to iterate through the instructions 
@@ -188,7 +188,7 @@ def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
     print("data length ", len(data))
     print("new data len ", len(new_data))
     
-    info_block = []
+    info_block = instruct_list
     
     j = 0 #variable to iterate through the binary data
     i = 0 #variable to iterate through the instructions 
@@ -196,17 +196,17 @@ def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
     ofdm_symbol_count = 0
     while j < len(new_data):
         if instruct_list[i] == 0:
-            info_block.append(0)
+            info_block[i] = 0
             j += 0
             i += 1
             
         elif instruct_list[i] == 1:
-            info_block.append(qpsk(new_data[j:j+2]))
+            info_block[i] = qpsk(new_data[j:j+2])
             j += 2
             i += 1
         
         elif instruct_list[i] == 2: 
-            info_block.append(qam16(new_data[j:j+4]))
+            info_block[i] = qam16(new_data[j:j+4])
             j += 4
             i += 1
             
