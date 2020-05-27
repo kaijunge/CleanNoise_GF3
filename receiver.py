@@ -134,27 +134,27 @@ def sliceDataContent_std(TF_front, TF_end, data, timeshift, N, CP, num_data_symb
             
     return received_modulated_data
 
-def demodVaryingModulation(constellation_array, instruct_str):
+def demodVaryingModulation(constellation_array, instruction_string):
     
-    binary_block = []
+    binary_block = instruction_string
     
     j = 0 #variable to iterate through the constellation symbols
     
     while j < len(constellation_array):
-        if instruct_str[j] == 0:
-            binary_block.append(0)
+        if instruction_string[j] == 0:
+            binary_block[j] = 0
             j += 1
             
-        elif instruct_str[j] == 1:
-            binary_block.append(iqpsk(constellation_array[j:j+1]))
+        elif instruction_string[j] == 1:
+            binary_block[j] = iqpsk(constellation_array[j:j+1])
             j += 1
         
-        elif instruct_str[j] == 2: 
-            binary_block.append(iqam16(constellation_array[j:j+1]))
+        elif instruction_string[j] == 2: 
+            binary_block[j] = iqam16(constellation_array[j:j+1])
             j += 1
         
-        elif instruct_str[j] == 3: 
-            binary_block.append(ibpsk(constellation_array[j:j+1]))
+        elif instruction_string[j] == 3: 
+            binary_block[j] = ibpsk(constellation_array[j:j+1])
             j += 1
     
     return "".join(binary_block) 
