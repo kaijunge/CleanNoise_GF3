@@ -167,3 +167,56 @@ def varyingModulation(data, instruct_str):
     useful_data_frequencies = np.concatenate(([0],info_block, [0],info_block_reverse_conjugate))
     
     return useful_data_frequencies
+
+
+
+def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
+    
+    inst_len = int(N/2 -1)
+    assert inst_len == len(instruct_list), "instruction list length must match DFT length"
+  
+    bitcount = 0
+    for instruction in instruct_list:
+        bitcount += instruction*2
+        
+    
+    additional = bitcount -len(data)%bitcount 
+    new_data = data + random_bits[:additional]
+    
+    print("bitcount", bitcount)
+    print("additional ", additional)
+    print("data length ", len(data))
+    print("new data len ", len(new_data))
+    
+    info_block = []
+    
+    j = 0 #variable to iterate through the binary data
+    i = 0 #variable to iterate through the instructions 
+    
+    ofdm_symbol_count = 0
+    while j < len(new_data):
+        if instruct_list[i] == 0:
+            info_block.append(0)
+            j += 0
+            i += 1
+            
+        elif instruct_list[i] == 1:
+            info_block.append(qpsk(new_data[j:j+2]))
+            j += 2
+            i += 1
+        
+        elif instruct_list[i] == 2: 
+            info_block.append(qam16(new_data[j:j+4]))
+            j += 4
+            i += 1
+            
+        if i > inst_len-1:
+            i = 0
+            ofdm_symbol_count += 1
+            print("symbol number " + str(ofdm_symbol_count) + " is done.")
+
+            if ofdm_symbol_count == max_odfm_symbol:
+                break
+            
+    info_block = np.array(info_block).ravel()
+    return info_block
