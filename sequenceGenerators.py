@@ -120,7 +120,16 @@ def prepare_payload(PL_Symbol, CE, CE_inert_freq):
 
 
 
-
+# combine the payload data and dispursed CE symbols in between 
+def prepare_payload_std(PL_Symbol, CE, chirp_signal, Frame_number, L_data):
+    frames = []
+    for i in range(Frame_number):
+        frame = np.array(chirp_signal)
+        frame = np.concatenate((frame, CE, np.concatenate((PL_Symbol[i*L_data:(i+1)*L_data])), CE))
+        frames.append(frame)
+        
+    return frames
+        
 
 ########################################################################
 ####   NOT USING THESE NOW   ###########################################

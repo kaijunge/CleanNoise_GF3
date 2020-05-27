@@ -20,6 +20,22 @@ def removeChirpAndPause(y, h, pause=0, plot = True, rng = 10):
     return time_data
 
 
+def removeChirpAndPause_std(y, h, limit, plot = True, rng = 10):
+    y_examin = np.array(y[:limit])
+    g = np.convolve(y_examin, h[::-1], 'valid') # convoluton
+    i_max = np.argmax(g[:int(len(g)/2)])
+    time_start_index = int(i_max + len(h)) # Chirp ends here
+    time_data = y[time_start_index:] # remove the chirp
+
+    if plot: 
+        plot_y(y_examin, f=0, title="Received signal")
+        plot_y(g, f=1, title="Match filter convolution")
+        plot_y(g[i_max - rng:i_max + rng], f=2, title="Closeup of peak +- " + str(rng) + " samples")
+
+    return time_data
+
+
+
 # return the array of relevant N time domain samples from an obtained time series
 # Input:    time_data = time series which we assume the data starts at n=0
 #           timeshift = where we want to start collecting the data (some point in the CP)
@@ -89,6 +105,34 @@ def sliceDataContent(data, timeshift, N_data, K_data, N_CE, K_CE, pilot_freq, to
         freq_content.append(fft(samples_content[i]))
     return samples_content, freq_content
 
+def sliceDataContent_std(TF_front, TF_end, data, timeshift, N, CP, num_data_symbol, gradient):
+    symbol_len = N + CP
+
+    ### MAYBE DO SOMETHING LIKE COMPARE THE PHASE OF THIS ONE TO THE INITIAL ONE BUT RIGHT NOW IT'S FINE :P
+
+    received_modulated_data = []
+    # for every block of data we have
+    for i in range(num_data_symbol):
+    
+        ## Maybe prepare some stuff for linear phase compensation.. maybe :P
+        adjustment = gradient * -1 / (frame_data_length + CE_repeat)
+            
+        samples_content = np.array(data[ symbol_len*i : symbol_len*(i+1) ][timeshift:timeshift+N]) 
+        freq_content = fft(samples_content)
+
+
+        response = np.zeros(int((N/2) - 1), dtype = complex)
+
+        for j in range(1,int(len(freq_content)/2)):
+            div = (freq_content[j]/TF_front[j]) \
+                * cmath.rect(1,j * int(i+ CE_repeat/2 + 0.5) * adjustment) 
+            
+            response[j-1] += div
+
+        received_modulated_data.append(np.array(response))
+
+            
+    return received_modulated_data
 
 
 def decode(maximum_freq_index, repetition_length, responses, num_info_blocks):
