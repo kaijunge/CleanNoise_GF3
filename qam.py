@@ -144,20 +144,20 @@ def varyingModulation(data, instruct_str):
     
     while j < len(data):
         if instruct_str[i] == 0:
-            info_block.append(0)
+            info_block[i] = 0
             j += 1
             i += 1
             
         elif instruct_str[i] == 1:
-            info_block.append(qpsk(data[j:j+2]))
+            info_block[i] = qpsk(data[j:j+2])
             j += 2
             i += 1
         
         elif instruct_str[i] == 2: 
-            info_block.append(qam16(data[j:j+4]))
+            info_block[i] = qam16(data[j:j+4])
             j += 4
             i += 1
-    
+            
     info_block = np.asarray(info_block)
     
     info_block_reverse_conjugate = info_block[::-1].conjugate()
