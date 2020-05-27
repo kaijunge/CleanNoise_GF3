@@ -188,32 +188,36 @@ def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
     print("data length ", len(data))
     print("new data len ", len(new_data))
     
-    info_block = instruct_list
+    symbol_length = int((len(new_data)/bitcount) * len(instruct_list))
+    info_block = np.zeros(symbol_length,dtype=complex)
     
     j = 0 #variable to iterate through the binary data
     i = 0 #variable to iterate through the instructions 
+    k = 0 #variable to iterate through the output data
     
     ofdm_symbol_count = 0
     while j < len(new_data):
         if instruct_list[i] == 0:
-            info_block[i] = 0
+            info_block[k] = complex(qpsk(random_bits[i:i+2]))
             j += 0
-            i += 1
-            
+
         elif instruct_list[i] == 1:
-            info_block[i] = qpsk(new_data[j:j+2])
+            info_block[k] = complex(qpsk(new_data[j:j+2]))
             j += 2
-            i += 1
         
         elif instruct_list[i] == 2: 
-            info_block[i] = qam16(new_data[j:j+4])
+            info_block[k] = complex(qam16(new_data[j:j+4]))
             j += 4
-            i += 1
             
-        if i > inst_len-1:
+        i+= 1
+        k+= 1
+        
+        if i == inst_len:
             i = 0
             ofdm_symbol_count += 1
-            print("symbol number " + str(ofdm_symbol_count) + " is done.")
+
+            if ofdm_symbol_count%100 == 0:
+                print("symbol number " + str(ofdm_symbol_count) + " is done.")
 
             if ofdm_symbol_count == max_odfm_symbol:
                 break
