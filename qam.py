@@ -170,7 +170,7 @@ def varyingModulation(data, instruct_str):
 
 
 
-def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
+def varyingModulation_std(data, instruct_list, N, random_bits, print_progress = False, max_odfm_symbol = 1e10):
     
     inst_len = int(N/2 -1)
     assert inst_len == len(instruct_list), "instruction list length must match DFT length"
@@ -198,7 +198,7 @@ def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
     ofdm_symbol_count = 0
     while j < len(new_data):
         if instruct_list[i] == 0:
-            info_block[k] = complex(qpsk(random_bits[i:i+2]))
+            info_block[k] = complex(qpsk(str(round(random.random())) + str(round(random.random())) ))
             j += 0
 
         elif instruct_list[i] == 1:
@@ -216,7 +216,7 @@ def varyingModulation_std(data, instruct_list, N, random_bits, max_odfm_symbol):
             i = 0
             ofdm_symbol_count += 1
 
-            if ofdm_symbol_count%100 == 0:
+            if ofdm_symbol_count%100 == 0 and print_progress:
                 print("symbol number " + str(ofdm_symbol_count) + " is done.")
 
             if ofdm_symbol_count == max_odfm_symbol:

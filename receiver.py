@@ -28,11 +28,51 @@ def removeChirpAndPause_std(y, h, limit, plot = True, rng = 10):
     time_data = y[time_start_index:] # remove the chirp
 
     if plot: 
+        print("i_max", i_max)
         plot_y(y_examin, f=0, title="Received signal")
         plot_y(g, f=1, title="Match filter convolution")
         plot_y(g[i_max - rng:i_max + rng], f=2, title="Closeup of peak +- " + str(rng) + " samples")
 
     return time_data
+
+
+def detect_chirps(y, h, limit):
+    
+    g = np.correlate(y[:limit*fs], h, 'valid')
+    half_max = max(g)/2
+    
+    near_max = 0
+    for i, val in enumerate(g):
+        if val > half_max:
+            near_max = i
+            break
+            
+    return y[near_max - fs*2:]
+
+
+def count_frames(y_next, h, length):
+    i = 0
+    count = 1
+    while 1:
+        portion = y_next[:fs*5]
+        g = np.convolve(portion, h[::-1], 'valid')
+        max_value = max(g)
+
+        if i == 0:
+            compare = max_value
+        else:
+            if max_value > compare * 0.2: 
+                count += 1
+            else:
+                break
+
+        y_next = y_next[length:]
+        if len(y_next) < len(h)*2:
+            break
+
+        i += 1
+
+    return count
 
 
 
@@ -133,6 +173,37 @@ def sliceDataContent_std(TF_front, TF_end, data, timeshift, N, CP, num_data_symb
 
             
     return received_modulated_data
+
+def demodVaryingModulation_std(constellation_array, instruct_list, N):
+    inst_len = int(N/2 -1)
+    assert inst_len == len(instruct_list), "instruction list length must match DFT length"
+  
+    binary_block = []
+    
+    
+    i = 0 #variable to iterate through the instructions symbols
+    
+    for j in range(len(constellation_array)):
+            
+        if instruct_list[i] == 1:
+            binary_block.append(iqpsk(constellation_array[j:j+1]))
+        
+        elif instruct_list[i] == 2: 
+            binary_block.append(iqam16(constellation_array[j:j+1]))
+        
+        elif instruct_list[i] == 3: 
+            binary_block.append(ibpsk(constellation_array[j:j+1]))
+        else:
+            pass
+        
+        i += 1
+        
+        if i > inst_len-1:
+            i = 0
+    
+    return "".join(binary_block) 
+
+
 
 def demodVaryingModulation(constellation_array, instruction_string):
     

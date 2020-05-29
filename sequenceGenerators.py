@@ -44,8 +44,9 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0, output
     ofdm_long_time_array = []
     ofdm_freq_arrays = []
     index = 0
+    
     # Loop through all the symbols
-    print('encoded symbols length = ', len(encoded_symbols))
+    #print('encoded symbols length = ', len(encoded_symbols))
     while index < len(encoded_symbols):
         
         # Add symbols in one DFT block, based on the limit of
@@ -118,7 +119,6 @@ def prepare_payload(PL_Symbol, CE, CE_inert_freq):
             
     Payload = np.concatenate((Payload, CE))
     return Payload
-
 
 
 # combine the payload data and dispursed CE symbols in between 

@@ -41,3 +41,8 @@ def str_to_bytearray(string_data):
         int_data.append(int(i,2))
 
     return bytearray(int_data)
+
+# XOR function
+_xormap = {('0', '1'): '1', ('1', '0'): '1', ('1', '1'): '0', ('0', '0'): '0'}
+def xor(x, y):
+    return ''.join([_xormap[a, b] for a, b in zip(x, y)])
