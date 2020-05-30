@@ -47,7 +47,10 @@ def detect_chirps(y, h, limit):
             near_max = i
             break
             
-    return y[near_max - fs*2:]
+    if near_max - fs*2 >= 0:
+        return y[near_max - fs*2:]
+    else:
+        return y
 
 
 def count_frames(y_next, h, length):
