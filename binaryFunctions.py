@@ -26,7 +26,6 @@ def binaryTextFileToBinary(filename):
     file.close()
     return line
 
-
 # Binary string to Bytes
 def str_to_bytearray(string_data):
     new_data = []
@@ -44,7 +43,7 @@ _xormap = {('0', '1'): '1', ('1', '0'): '1', ('1', '1'): '0', ('0', '0'): '0'}
 def xor(x, y):
     return ''.join([_xormap[a, b] for a, b in zip(x, y)])
 
-
+# Reutrn a binary file from some file (some file -> byte -> binary)
 def imageFileToBinary(filename):
     with open(filename, "rb") as image:
         f = image.read()

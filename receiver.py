@@ -5,7 +5,7 @@ from binaryFunctions import *
 
 # y = recorded time series
 # h = chirp signal (for matched filter)
-# pause = pause time in seconds between chirp and data
+# limit = how far into the sequenc do you want to check for a chirp
 def removeChirpAndPause_std(y, h, limit, plot = True, rng = 10):
     y_examin = np.array(y[:limit])
     g = np.convolve(y_examin, h[::-1], 'valid') # convoluton
@@ -21,7 +21,9 @@ def removeChirpAndPause_std(y, h, limit, plot = True, rng = 10):
 
     return time_data
 
-
+# Takes in the raw sequence, chirp signal, how many SECONDS you want to look for the first chirp
+# and then returns you the sequence with any pause before the start cut off. 
+# e.g.: if there is a long pause before transmitting any data, it will remove that pause
 def detect_chirps(y, h, limit):
     
     g = np.correlate(y[:limit*fs], h, 'valid')
@@ -39,6 +41,10 @@ def detect_chirps(y, h, limit):
         return y
 
 
+# Count the number of frames in the signal by checking the considering the matched filter convolution of the signal
+# Lenght = length of one frame in time indices
+# y_next = y without any pause in the beginning (ie output of detect_chirps)
+# h = chirp signal (matched filter conv)
 def count_frames(y_next, h, length):
     i = 0
     count = 1
@@ -61,7 +67,7 @@ def count_frames(y_next, h, length):
 
         i += 1
 
-    return count
+    return count-1
 
 
 
@@ -87,7 +93,7 @@ def sliceData(time_data, timeshift, N, K, repeat):
 
     return np.asarray(samples), np.asarray(freq), remaining
 
-# Get the TF of the channel by averaging multiple OFDM symbols 
+# Get the TF of the channel by averaging multiple OFDM symbols in the frequency domain 
 def getTF_FreqAverage(freq, known_freq, N, repeat):
     TF = np.zeros(N,dtype=complex)
     for freq_response in freq:
@@ -104,7 +110,9 @@ def getTF_FreqAverage(freq, known_freq, N, repeat):
     
     return impulse, TF
 
-
+# Takes in the sequence starting promptly at the first data OFDM symbol (in time domain)
+# Uses the estimated channel response transfer function to determine the complex frequency values (of positive frequencies)
+# Uses the gradient (estimate of linear phase gradient) to correct for the added linear phase. 
 def sliceDataContent_std(TF_front, TF_end, data, timeshift, N, CP, num_data_symbol, gradient, CE_repeat):
     symbol_len = N + CP
 
@@ -134,6 +142,8 @@ def sliceDataContent_std(TF_front, TF_end, data, timeshift, N, CP, num_data_symb
             
     return received_modulated_data
 
+# Takes a long list of constellations (1D) along with the instruction list to convert them into binary
+# specifics are done by using functions in the qam.py file
 def demodVaryingModulation_std(constellation_array, instruct_list, N):
     inst_len = int(N/2 -1)
     assert inst_len == len(instruct_list), "instruction list length must match DFT length"
@@ -192,7 +202,7 @@ def remove_metadata(binary_recovered):
     
     return Filename, Length, raw_file
 
-# K-Means
+# Try to rotate the constellation correctly by finding cluster centres by the k-means algorithm 
 def find_angle_offset(a, disp = False):
 
     b = [[None]] * len(a)

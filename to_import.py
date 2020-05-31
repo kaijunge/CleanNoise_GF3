@@ -13,6 +13,7 @@ import scipy
 import random
 from sklearn.cluster import KMeans
 
+# Sampling frequency
 fs = 48000
 
 # Function to display something quickly

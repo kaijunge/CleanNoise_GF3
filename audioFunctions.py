@@ -38,6 +38,7 @@ def play_note(note):
     play_obj.wait_done()
     print("done")
 
+# Play the reocrded data
 def play(data, fs = fs):
     sd.play(data, fs)
     print("playing")
@@ -45,6 +46,7 @@ def play(data, fs = fs):
     print(data)
     sd.wait()  # Wait until file is done playing
 
+# Play the reocrded data, except now from an external file
 def playFile(filename):
     # Extract data and sampling rate from file
     data, fs = sf.read(filename, dtype='float32')  
@@ -55,6 +57,7 @@ def playFile(filename):
     sd.wait()  # Wait until file is done playing
     print("done")
 
+# Return the array of values representing the wav file
 def audioDataFromFile(filename):
     data, fs = sf.read(filename, dtype='float32')  
     return data

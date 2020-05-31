@@ -31,6 +31,10 @@ def random_binary(length):
     return output 
 
 #Assign encoded_symbols to OFDM symbols
+#Input a long list of all the QAM signals, which the function will allocate to relevant frequency bins
+#to then be iFFT-ed into a time domain signal 
+#Return a numpy list of time domain signals with the relevant CP attached
+#Also return a numpy list of freq domain signals grouped into ofdm blocks
 def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0, output_long = False):
     assert DFT_length>=CP_length, "CP length must be <= DFT length"
 
@@ -79,12 +83,15 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0, output
         else:
             ofdm_single_time_domain = np.concatenate((useful_data[-1*CP_length:], useful_data))
 
+        # Prepare the signal to be audible (without this weird speaker sounds come out)
         ofdm_single_time_domain = scaleToAudible(ofdm_single_time_domain)
         ofdm_long_time_array.extend(ofdm_single_time_domain)
 
+        # apppend list
         ofdm_freq_arrays.append(useful_data_frequencies)
         ofdm_time_arrays.append(ofdm_single_time_domain)
         
+    # usually you don't want the long time domain signal, but the option is available for returning this. 
     if output_long: 
         return np.asarray(ofdm_time_arrays), np.asarray(ofdm_freq_arrays), np.asarray(ofdm_long_time_array)
     else:
@@ -108,7 +115,8 @@ def save_transmit(tuple_to_send, playOutput = False):
 
     return scaled_array
 
-# combine the payload data and dispursed CE symbols in between 
+# combine the payload data, channel estimation symbols, and chirp singal 
+# Accoriding to the standard -> we have a "frame" to be chirp, 20xCE, 180xdata, 20xCE
 def prepare_payload_std(PL_Symbol, CE, chirp_signal, Frame_number, L_data):
     frames = []
     for i in range(Frame_number):
