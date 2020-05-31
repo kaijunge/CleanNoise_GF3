@@ -1,6 +1,7 @@
 from qam import *
 from audioFunctions import *
 from to_import import *
+from binaryFunctions import *
 
 # Get a sequence and scale it so it so its max amplitude corresponds with 16 bits
 def scaleToAudible(array, volume = 100):
@@ -44,7 +45,7 @@ def ofdmSymbols(encoded_symbols, CP_length, DFT_length, max_freq_index=0, output
     ofdm_long_time_array = []
     ofdm_freq_arrays = []
     index = 0
-    
+
     # Loop through all the symbols
     #print('encoded symbols length = ', len(encoded_symbols))
     while index < len(encoded_symbols):
@@ -108,20 +109,6 @@ def save_transmit(tuple_to_send, playOutput = False):
     return scaled_array
 
 # combine the payload data and dispursed CE symbols in between 
-def prepare_payload(PL_Symbol, CE, CE_inert_freq):
-    Payload = PL_Symbol[0]
-    for i in range(1, len(PL_Symbol)):
-        
-        if i%(CE_inert_freq-1) == 0:
-            Payload = np.concatenate((Payload, CE, PL_Symbol[i]))
-        else: 
-            Payload = np.concatenate((Payload, PL_Symbol[i]))
-            
-    Payload = np.concatenate((Payload, CE))
-    return Payload
-
-
-# combine the payload data and dispursed CE symbols in between 
 def prepare_payload_std(PL_Symbol, CE, chirp_signal, Frame_number, L_data):
     frames = []
     for i in range(Frame_number):
@@ -130,35 +117,3 @@ def prepare_payload_std(PL_Symbol, CE, chirp_signal, Frame_number, L_data):
         frames.append(frame)
         
     return frames
-        
-
-########################################################################
-####   NOT USING THESE NOW   ###########################################
-########################################################################
-
-
-# Not using this now
-def transmit2(*symbol_array):
-    output = Pause(1)
-    for symbol in symbol_array:
-        output = np.append(output, symbol) 
-
-    play_note(output)
-    return output
-
-# Not using this now
-def transmit(chirp_signal, ofdm_symbol_array, play = False):
-    
-    output = np.concatenate( (chirp_signal,Pause(1),ofdm_symbol_array,Pause(1)) )
-    write('transmit.wav', fs, output)
-
-    if play:
-        play_note(output)
-
-# Not using this now
-#Generate a Zadoff-Chu sequence of given order and length
-def ZadoffChu(order, length, index=0):
-    cf = length % 2
-    n = np.arange(length)
-    arg = np.pi * order * n * (n+cf+2*index)/length
-    return np.exp(-1j*arg)

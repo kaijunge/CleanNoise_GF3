@@ -11,6 +11,7 @@ import simpleaudio as sa
 import wave
 import scipy
 import random
+from sklearn.cluster import KMeans
 
 fs = 48000
 
