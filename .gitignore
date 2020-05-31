@@ -4,6 +4,9 @@
 # Ignore files with large volumes or data
 Data_Files
 Wav_Files
+.vscode
+.ipynb_checkpoints
+__pycache__
 
 # Ignore whatever .wav files
 *.wav
