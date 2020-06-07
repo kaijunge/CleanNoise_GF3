@@ -14,7 +14,7 @@ import random
 from sklearn.cluster import KMeans
 
 # Sampling frequency
-fs = 48000
+fs = 48000 #44100
 
 # Function to display something quickly
 def plot_y(y, f=0, title = ""):
